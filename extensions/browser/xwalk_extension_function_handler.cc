@@ -6,6 +6,7 @@
 
 #include "base/location.h"
 #include "xwalk/extensions/common/xwalk_external_instance.h"
+#include "base/thread_task_runner_handle.h"
 
 namespace xwalk {
 namespace extensions {
@@ -63,7 +64,7 @@ void XWalkExtensionFunctionHandler::HandleMessage(scoped_ptr<base::Value> msg) {
           make_scoped_ptr(static_cast<base::ListValue*>(msg.release())),
           base::Bind(&XWalkExtensionFunctionHandler::DispatchResult,
                      weak_factory_.GetWeakPtr(),
-                     base::MessageLoopProxy::current(),
+                     base::ThreadTaskRunnerHandle::Get(),
                      callback_id)));
 
   if (!HandleFunction(info.Pass())) {
@@ -86,12 +87,12 @@ bool XWalkExtensionFunctionHandler::HandleFunction(
 // static
 void XWalkExtensionFunctionHandler::DispatchResult(
     const base::WeakPtr<XWalkExtensionFunctionHandler>& handler,
-    scoped_refptr<base::MessageLoopProxy> client_task_runner,
+    scoped_refptr<base::SingleThreadTaskRunner> client_task_runner,
     const std::string& callback_id,
     scoped_ptr<base::ListValue> result) {
   DCHECK(result);
 
-  if (client_task_runner != base::MessageLoopProxy::current()) {
+  if (client_task_runner != base::ThreadTaskRunnerHandle::Get()) {
     client_task_runner->PostTask(FROM_HERE,
         base::Bind(&XWalkExtensionFunctionHandler::DispatchResult,
                    handler,
