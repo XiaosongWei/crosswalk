@@ -38,7 +38,7 @@ public abstract class XWalkRuntimeActivityBase extends XWalkActivity {
     }
 
     @Override
-    protected boolean onEnableDownloadMode() {
+    protected boolean shouldEnableDownloadMode() {
         boolean enabled = false;
         try {
             ApplicationInfo appInfo = getPackageManager().getApplicationInfo(
