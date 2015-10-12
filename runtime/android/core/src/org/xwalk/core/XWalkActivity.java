@@ -40,8 +40,8 @@ import android.os.Bundle;
  * <p>Besides the embedded mode and shared mode, silent download mode is also supported. In silent
  * download mode, the Crosswalk runtime will be downloaded in the background silently without any
  * user interaction. To enable silent download mode, you need to insert the meta-data element "xwalk_apk_url"
- * as mentioned above into the AndroidManifest.xml and override <code>XWalkActivity.onEnableDownloadMode<code>
- * to get it return true.</p>
+ * as mentioned above into the AndroidManifest.xml and override <code>XWalkActivity.shouldEnableDownloadMode
+ * <code> to get it return true.</p>
  *
  * <p>In embedded mode, the developer can use the embedding API in <code>onCreate()</code> directly.
  * But in shared mode and lite mode, the Crosswalk runtime isn't loaded yet at the moment the
@@ -103,9 +103,9 @@ public abstract class XWalkActivity extends Activity {
 
     /**
      * Override this and return true if you want to get your app work
-     * under silent download mode.
+     * under silent download mode. By default, it returns false.
      */
-    protected boolean onEnableDownloadMode() {
+    protected boolean shouldEnableDownloadMode() {
         return false;
     }
 
@@ -134,7 +134,7 @@ public abstract class XWalkActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (onEnableDownloadMode()) {
+        if (shouldEnableDownloadMode()) {
             mActivityDelegate = new XWalkActivityDelegate(this,
                 new XWalkActivityDelegate.XWalkUpdateListener() {
                     @Override

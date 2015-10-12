@@ -17,8 +17,11 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -468,10 +471,18 @@ public class XWalkUpdater {
                 protected Void doInBackground(Void... params) {
                     final String destDir = mActivity.getDir(XWALK_CORE_LIB_DIR,
                             Context.MODE_PRIVATE).toString();
-                    if(!verifyXWalkRuntimeLib(downloadedUri.getPath())) {
+                    final String libFile = downloadedUri.getPath();
+                    long startTime = SystemClock.uptimeMillis();
+                    if(!verifyXWalkRuntimeLib(libFile)) {
                         Assert.fail("The downloaded XWalkRuntimeLib.apk is invalid!");
                     }
-                    if (!extractLibResources(downloadedUri.getPath(), destDir)) Assert.fail();
+                    Log.d(TAG, String.format("Time to verify Apk: %d ms",
+                            SystemClock.uptimeMillis() - startTime));
+                    if (!extractCompressedLibResources(libFile, destDir) &&
+                        !extractLibResources(libFile, destDir)) {
+                        deleteXWalkCoreLibResources(destDir);
+                        Assert.fail();
+                    }
                     return null;
                 }
 
@@ -510,8 +521,64 @@ public class XWalkUpdater {
                     XWalkAppVersion.XWALK_APK_HASH_CODE);
     }
 
+    private boolean extractCompressedLibResources(String libFile,
+            String destDir) {
+        Log.d(TAG, "Extract from Apk (lzma compressed) " + libFile);
+        long startTime = SystemClock.uptimeMillis();
+        ZipFile zipFile = null;
+        try {
+            zipFile = new ZipFile(libFile);
+            for (String resource : XWALK_LIB_RESOURCES) {
+                String entryName = "assets" + File.separator + resource + ".lzma";
+                Log.d(TAG, "unzip " + entryName);
+                InputStream input = null;
+                OutputStream output = null;
+
+                try {
+                    ZipEntry entry = zipFile.getEntry(entryName);
+                    input = new BufferedInputStream(zipFile.getInputStream(entry));
+                    output = new BufferedOutputStream(new FileOutputStream(
+                            new File(destDir, resource)));
+                    XWalkLibraryDecompressor.decodeWithLzma(input, output);
+                } catch (IOException | NullPointerException e) {
+                    Log.d(TAG, e.getLocalizedMessage());
+                    return false;
+                } finally {
+                    if (output != null) {
+                        try {
+                            output.flush();
+                        } catch (IOException e) {
+                        }
+                        try {
+                            output.close();
+                        } catch (IOException e) {
+                        }
+                    }
+                    if (input != null) {
+                        try {
+                            input.close();
+                        } catch (IOException e) {
+                        }
+                    }
+                }
+            }
+        } catch (IOException | NullPointerException e) {
+            Log.d(TAG, e.getLocalizedMessage());
+            return false;
+        } finally {
+            try {
+                zipFile.close();
+            } catch (IOException | NullPointerException e) {
+            }
+        }
+        Log.d(TAG, String.format("Time to extract LZMA compressed Apk: %d ms",
+                SystemClock.uptimeMillis() - startTime));
+        return true;
+    }
+
     private boolean extractLibResources(String libFile, String destDir) {
         Log.d(TAG, "Extract from " + libFile);
+        long startTime = SystemClock.uptimeMillis();
         ZipFile zipFile = null;
         try {
             zipFile = new ZipFile(libFile);
@@ -540,6 +607,8 @@ public class XWalkUpdater {
             } catch (IOException | NullPointerException e) {
             }
         }
+        Log.d(TAG, String.format("Time to extract Apk: %d ms",
+                SystemClock.uptimeMillis() - startTime));
         return true;
     }
 
@@ -594,6 +663,13 @@ public class XWalkUpdater {
         if (outputException != null) {
             if (file.isFile()) file.delete();
             throw outputException;
+        }
+    }
+
+    private void deleteXWalkCoreLibResources(String destDir) {
+        for (String resource : XWALK_LIB_RESOURCES) {
+            File resFile = new File(destDir, resource);
+            if (resFile.exists()) resFile.delete();
         }
     }
 }
