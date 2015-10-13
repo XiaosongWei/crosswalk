@@ -213,6 +213,101 @@
       'includes': ['../build/jni_generator.gypi'],
     },
     {
+      'target_name': 'xwalk_runtime_lib_lzma_compress',
+      'type': 'none',
+      'dependencies': [
+        'xwalk_runtime_lib_apk',
+      ],
+      'variables': {
+        'assets_dir': '<(PRODUCT_DIR)/xwalk_runtime_lib_lzma/assets/',
+        'libxwalkcore_so': '<(PRODUCT_DIR)/xwalk_runtime_lib_apk/stripped_libraries/libxwalkcore.so',
+        'classes_dex': '<(PRODUCT_DIR)/xwalk_runtime_lib_apk/classes.dex',
+        'icudtl_dat': '<(PRODUCT_DIR)/xwalk_runtime_lib/assets/icudtl.dat',
+        'xwalk_pak':'<(PRODUCT_DIR)/xwalk_runtime_lib/assets/xwalk.pak',
+      },
+      'actions': [
+        {
+          'action_name': 'lzma_compress_libxwalkcore',
+          'message': 'compress libxwalkcore.so',
+          'inputs': [
+            'build/android/lzma_compress.py',
+          ],
+          'outputs': [
+            '<(assets_dir)/libxwalkcore.so.lzma',
+          ],
+          'action': [
+            'python', 'build/android/lzma_compress.py',
+            '-t', '<(assets_dir)',
+            '-f', '<(libxwalkcore_so)',
+          ],
+        },
+        {
+          'action_name': 'lzma_compress_classes',
+          'message': 'compress classes.dex',
+          'inputs': [
+            'build/android/lzma_compress.py',
+          ],
+          'outputs': [
+            '<(assets_dir)/classes.dex.lzma',
+          ],
+          'action': [
+            'python', 'build/android/lzma_compress.py',
+            '-t', '<(assets_dir)',
+            '-f', '<(classes_dex)',
+          ],
+        },
+        {
+          'action_name': 'lzma_compress_icudtl',
+          'message': 'compress icudtl.dat',
+          'inputs': [
+            '<(icudtl_dat)',
+            'build/android/lzma_compress.py',
+          ],
+          'outputs': [
+            '<(assets_dir)/icudtl.dat.lzma',
+          ],
+          'action': [
+            'python', 'build/android/lzma_compress.py',
+            '-t', '<(assets_dir)',
+            '-f', '<(icudtl_dat)',
+          ],
+        },
+        {
+          'action_name': 'lzma_compress_xwalk',
+          'message': 'compress xwalk.pak',
+          'inputs': [
+            '<(xwalk_pak)',
+            'build/android/lzma_compress.py',
+          ],
+          'outputs': [
+            '<(assets_dir)/xwalk.pak.lzma',
+          ],
+          'action': [
+            'python', 'build/android/lzma_compress.py',
+            '-t', '<(assets_dir)',
+            '-f', '<(xwalk_pak)',
+          ],
+        },
+      ],
+    },
+    {
+      'target_name': 'xwalk_runtime_lib_lzma_apk',
+      'type': 'none',
+      'dependencies': [
+        'xwalk_runtime_lib_lzma_compress'
+      ],
+      'variables': {
+        'apk_name': 'XWalkRuntimeLibLzma',
+        'java_in_dir': 'runtime/android/runtime_lib',
+        'resource_dir': 'runtime/android/runtime_lib/res',
+        'asset_location': '<(PRODUCT_DIR)/xwalk_runtime_lib_lzma/assets',
+        'app_manifest_version_name': '<(xwalk_version)',
+        'app_manifest_version_code': '<(xwalk_version_code)',
+        'is_test_apk': 1,
+      },
+      'includes': ['../build/java_apk.gypi'],
+    },
+    {
       'target_name': 'xwalk_runtime_lib_apk',
       'type': 'none',
       'dependencies': [
