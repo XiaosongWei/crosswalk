@@ -28,7 +28,13 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -519,6 +525,103 @@ public class XWalkUpdater {
                 XWalkCoreVerifier.verifyPackageInfo(pkgInfo,
                     XWalkAppVersion.XWALK_APK_HASH_ALGORITHM,
                     XWalkAppVersion.XWALK_APK_HASH_CODE);
+    }
+
+    private class DecompressTask implements Callable<Boolean> {
+        private final String mLibFile;
+        private final String mDestDir;
+        private final String mEntryName;
+        private final String mResource;
+
+        public DecompressTask(String libFile, String destDir,
+                String entryName, String resource) {
+            mLibFile = libFile;
+            mDestDir = destDir;
+            mEntryName = entryName;
+            mResource = resource;
+        }
+
+        @Override
+        public Boolean call() {
+            Log.d(TAG, "Extract from Apk (lzma compressed) " + mLibFile);
+            long startTime = SystemClock.uptimeMillis();
+            ZipFile zipFile = null;
+            try {
+                zipFile = new ZipFile(mLibFile);
+                Log.d(TAG, "unzip/decompress " + mEntryName);
+                InputStream input = null;
+                OutputStream output = null;
+
+                try {
+                    ZipEntry entry = zipFile.getEntry(mEntryName);
+                    input = new BufferedInputStream(zipFile.getInputStream(entry));
+                    output = new BufferedOutputStream(new FileOutputStream(
+                            new File(mDestDir, mResource)));
+                    XWalkLibraryDecompressor.decodeWithLzma(input, output);
+                } catch (IOException | NullPointerException e) {
+                    Log.d(TAG, e.getLocalizedMessage());
+                    return false;
+                } finally {
+                    if (output != null) {
+                        try {
+                            output.flush();
+                        } catch (IOException e) {
+                        }
+                        try {
+                            output.close();
+                        } catch (IOException e) {
+                        }
+                    }
+                    if (input != null) {
+                        try {
+                            input.close();
+                        } catch (IOException e) {
+                        }
+                    }
+                }
+            } catch (IOException | NullPointerException e) {
+                Log.d(TAG, e.getLocalizedMessage());
+                return false;
+            } finally {
+                try {
+                    zipFile.close();
+                } catch (IOException | NullPointerException e) {
+                }
+            }
+            Log.d(TAG, String.format("Time to extract LZMA compressed %s: %d ms",
+                    mEntryName, SystemClock.uptimeMillis() - startTime));
+            return true;
+        }
+    }
+
+    private boolean extractCompressedLibResourcesParallel(String libFile,
+            String destDir) {
+        boolean result = true;
+        long startTime = SystemClock.uptimeMillis();
+        final List<Callable<Boolean>> taskList =
+                new ArrayList<Callable<Boolean>>(XWALK_LIB_RESOURCES.length);
+        final ExecutorService pool =
+                Executors.newFixedThreadPool(XWALK_LIB_RESOURCES.length);
+
+        for (String resource: XWALK_LIB_RESOURCES) {
+            taskList.add(new DecompressTask(libFile, destDir,
+                    "assets" + File.separator + resource + ".lzma", resource));
+        }
+
+        try {
+            final List<Future<Boolean>> futureList = pool.invokeAll(taskList);
+            for (Future<Boolean> f : futureList) {
+                result = f.get();
+                if (result == false) break;
+            }
+        } catch (Exception e) {
+            Log.d(TAG, e.getLocalizedMessage());
+            result = false;
+        }
+        pool.shutdown();
+        Log.d(TAG, String.format("Time to extract compressed Apk: %d ms",
+                SystemClock.uptimeMillis() - startTime));
+        return result;
     }
 
     private boolean extractCompressedLibResources(String libFile,
