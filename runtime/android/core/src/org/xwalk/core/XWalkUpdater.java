@@ -175,6 +175,13 @@ import org.xwalk.core.XWalkLibraryLoader.DownloadListener;
  * <pre>
  * &lt;uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" /&gt;
  * </pre>
+ *
+ * <p>How to update Crosswalk Runtime in download mode:</p>
+ *
+ * <p>We don't handle the auto update in crosswalk, it's developer's responsibility to handle
+ * the auto update since the update mechanism may differ in different situations. However, we
+ * provide an API <code>resetXWalkRuntimeForUpdate()</code> to help triggerring a new XWalk
+ * Runtime download in subsequent XWalk initilization.</p>
  */
 
 public class XWalkUpdater {
@@ -364,6 +371,22 @@ public class XWalkUpdater {
     public boolean cancelBackgroundDownload() {
         if (mBackgroundUpdateListener == null || !mIsDownloading) return false;
         return XWalkLibraryLoader.cancelDownload();
+    }
+
+    /**
+     * Before starting to initialize XWalk by using XWalkInitializer, invoke this method
+     * will guarantee that the current XWalk Runtime be deleted and the subsequent initialization
+     * will trigger a new XWalkRuntime download.
+     *
+     * Invoke this method if you want to update XWalk Runtime. To avoid race condition,
+     * this must be invoked before XWalk initialization.
+     *
+     * @param context The application context
+     */
+    public static void resetXWalkRuntimeForUpdate(Context context) {
+        final String destDir = context.getDir(XWALK_CORE_LIB_DIR,
+                Context.MODE_PRIVATE).toString();
+        deleteXWalkCoreLibResources(destDir);
     }
 
     private void downloadXWalkApk() {
@@ -769,7 +792,7 @@ public class XWalkUpdater {
         }
     }
 
-    private void deleteXWalkCoreLibResources(String destDir) {
+    private static void deleteXWalkCoreLibResources(String destDir) {
         for (String resource : XWALK_LIB_RESOURCES) {
             File resFile = new File(destDir, resource);
             if (resFile.exists()) resFile.delete();
