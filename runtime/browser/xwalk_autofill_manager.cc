@@ -17,6 +17,8 @@
 #include "xwalk/runtime/browser/xwalk_browser_context.h"
 #include "xwalk/runtime/browser/xwalk_runner.h"
 
+#include "xwalk/runtime/browser/xwalk_password_manager_client.h"
+
 #if defined(OS_ANDROID)
 #include "base/android/locale_utils.h"
 #include "xwalk/runtime/browser/android/xwalk_autofill_client_android.h"
@@ -37,6 +39,7 @@ XWalkAutofillManager::~XWalkAutofillManager() {
 XWalkAutofillManager::XWalkAutofillManager(
     content::WebContents* web_contents)
     : web_contents_(web_contents) {
+  LOG(ERROR) << __FUNCTION__ << ":" << __LINE__;
 #if defined(OS_ANDROID)
   XWalkAutofillClient* autofill_manager_delegate =
       XWalkAutofillClientAndroid::FromWebContents(web_contents_);
@@ -73,6 +76,7 @@ void XWalkAutofillManager::UpdateRendererPreferences() {
 }
 
 void XWalkAutofillManager::InitAutofillIfNecessary(bool enabled) {
+  LOG(ERROR) << __FUNCTION__ << ":" << __LINE__;
   // Do not initialize if the feature is not enabled.
   if (!enabled)
     return;
@@ -82,12 +86,16 @@ void XWalkAutofillManager::InitAutofillIfNecessary(bool enabled) {
 
   CreateUserPrefServiceIfNecessary();
 #if defined (OS_ANDROID)
+  LOG(ERROR) << __FUNCTION__ << ":" << __LINE__;
   XWalkAutofillClientAndroid::CreateForWebContents(web_contents_);
   autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
       web_contents_,
       XWalkAutofillClientAndroid::FromWebContents(web_contents_),
       base::android::GetDefaultLocale(),
       autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
+  XWalkPasswordManagerClient::CreateForWebContentsWithAutofillClient(
+      web_contents_,
+      XWalkAutofillClientAndroid::FromWebContents(web_contents_));      
 #else
   XWalkAutofillClientDesktop::CreateForWebContents(web_contents_);
   autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(

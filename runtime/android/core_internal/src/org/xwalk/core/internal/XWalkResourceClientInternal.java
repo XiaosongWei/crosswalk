@@ -30,6 +30,7 @@ import java.util.Map;
  */
 @XWalkAPI(createExternally = true)
 public class XWalkResourceClientInternal {
+private static final String TAG = "XWalkResourceClient";
     /**
      * Success
      * @since 1.0
@@ -367,7 +368,7 @@ public class XWalkResourceClientInternal {
     public void onReceivedHttpAuthRequest(XWalkViewInternal view,
             XWalkHttpAuthHandlerInternal handler, String host, String realm) {
         if (view == null) return;
-
+Log.e(TAG, "onReceivedHttpAuthRequest host: " + host + " realm: " + realm);
         final XWalkHttpAuthHandlerInternal haHandler = handler;
         Context context = view.getContext();
         LinearLayout layout = new LinearLayout(context);

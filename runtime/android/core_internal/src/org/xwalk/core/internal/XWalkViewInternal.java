@@ -313,8 +313,8 @@ public class XWalkViewInternal extends android.widget.FrameLayout {
 
         // Auto detect network connectivity state.
         // setAutoDetectConnectivityState() need to be called before activity started.
-        NetworkChangeNotifier.init(activity);
-        NetworkChangeNotifier.setAutoDetectConnectivityState(true);
+        //NetworkChangeNotifier.init(activity);
+        //NetworkChangeNotifier.setAutoDetectConnectivityState(true);
 
         // We will miss activity onCreate() status in ApplicationStatusManager,
         // informActivityStarted() will simulate these callbacks.

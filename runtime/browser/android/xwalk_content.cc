@@ -130,6 +130,7 @@ XWalkContent* XWalkContent::FromWebContents(
 
 XWalkContent::XWalkContent(scoped_ptr<content::WebContents> web_contents)
     : web_contents_(web_contents.Pass()) {
+  LOG(ERROR) << __FUNCTION__ << ":" << __LINE__;
   xwalk_autofill_manager_.reset(new XWalkAutofillManager(web_contents_.get()));
 }
 
@@ -143,6 +144,7 @@ void XWalkContent::SetXWalkAutofillClient(jobject client) {
 
 void XWalkContent::SetSaveFormData(bool enabled) {
   DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
+  LOG(ERROR) << "SetSaveFormData enabled " << enabled;
   xwalk_autofill_manager_->InitAutofillIfNecessary(enabled);
   // We need to check for the existence, since autofill_manager_delegate
   // may not be created when the setting is false.

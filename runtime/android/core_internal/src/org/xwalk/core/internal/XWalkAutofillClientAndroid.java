@@ -6,6 +6,7 @@
 package org.xwalk.core.internal;
 
 import android.view.ViewGroup;
+import android.util.Log;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -21,7 +22,7 @@ import org.chromium.ui.DropdownItem;
  */
 @JNINamespace("xwalk")
 public class XWalkAutofillClientAndroid {
-
+    private static final String TAG = "XWalkAutofillClientAndroid";
     private final long mNativeXWalkAutofillClientAndroid;
     private AutofillPopup mAutofillPopup;
     private ContentViewCore mContentViewCore;
@@ -42,6 +43,7 @@ public class XWalkAutofillClientAndroid {
     @CalledByNative
     private void showAutofillPopup(float x, float y, float width, float height,
             boolean isRtl, AutofillSuggestion[] suggestions) {
+            Log.e(TAG, "showAutofillPopup");
 
         if (mContentViewCore == null) return;
 
@@ -54,6 +56,7 @@ public class XWalkAutofillClientAndroid {
                     public void dismissed() { }
                     @Override
                     public void suggestionSelected(int listIndex) {
+                    Log.e(TAG, "suggestionSelected index: " + listIndex);
                         nativeSuggestionSelected(mNativeXWalkAutofillClientAndroid, listIndex);
                     }
                     @Override
@@ -66,6 +69,7 @@ public class XWalkAutofillClientAndroid {
 
     @CalledByNative
     public void hideAutofillPopup() {
+    Log.e(TAG, "hideAutofillPopup");
         if (mAutofillPopup == null) return;
         mAutofillPopup.dismiss();
         mAutofillPopup = null;
@@ -73,6 +77,7 @@ public class XWalkAutofillClientAndroid {
 
     @CalledByNative
     private static AutofillSuggestion[] createAutofillSuggestionArray(int size) {
+    Log.e(TAG, "createAutofillSuggestionArray size " + size);
         return new AutofillSuggestion[size];
     }
 
@@ -86,6 +91,7 @@ public class XWalkAutofillClientAndroid {
     @CalledByNative
     private static void addToAutofillSuggestionArray(AutofillSuggestion[] array, int index,
             String name, String label, int uniqueId) {
+        Log.e(TAG, "addToAutofillSuggestionArray index: " + index + " name: " + name + " label: " + label);
         array[index] = new AutofillSuggestion(name, label, DropdownItem.NO_ICON, uniqueId, false);
     }
 
