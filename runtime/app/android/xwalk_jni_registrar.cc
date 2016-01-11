@@ -11,6 +11,9 @@
 #include "net/android/net_jni_registrar.h"
 #include "xwalk/extensions/common/android/xwalk_extension_android.h"
 #include "xwalk/extensions/common/android/xwalk_native_extension_loader_android.h"
+#include "xwalk/runtime/browser/android/confirm_infobar.h"
+#include "xwalk/runtime/browser/android/infobar_android.h"
+#include "xwalk/runtime/browser/android/infobar_container_android.h"
 #include "xwalk/runtime/browser/android/cookie_manager.h"
 #include "xwalk/runtime/browser/android/net/android_protocol_handler.h"
 #include "xwalk/runtime/browser/android/net/input_stream_impl.h"
@@ -53,6 +56,9 @@ static base::android::RegistrationMethod kXWalkRegisteredMethods[] = {
   { "XWalkViewDelegate", RegisterXWalkViewDelegate },
   { "XWalkWebContentsDelegate", RegisterXWalkWebContentsDelegate },
   { "XWalkWebResourceResponseImpl", RegisterXWalkWebResourceResponse },
+  { "InfoBarContainer", RegisterInfoBarContainer},
+  { "ConfirmInfoBar", RegisterConfirmInfoBarDelegate},
+  { "InfoBar", RegisterNativeInfoBar},
 };
 
 bool RegisterJni(JNIEnv* env) {

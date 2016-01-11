@@ -343,6 +343,18 @@
           ],
           'sources': [
             'experimental/native_file_system/virtual_root_provider_android.cc',
+            'runtime/browser/android/confirm_infobar.cc',
+            'runtime/browser/android/confirm_infobar.h',
+            'runtime/browser/android/infobar_android.cc',
+            'runtime/browser/android/infobar_android.h',
+            'runtime/browser/android/infobar_container_android.cc',
+            'runtime/browser/android/infobar_container_android.h',
+            'runtime/browser/android/save_password_infobar.cc',
+            'runtime/browser/android/save_password_infobar.h',
+            'runtime/browser/infobar_service.cc',
+            'runtime/browser/infobar_service.cc',
+            'runtime/browser/save_password_infobar_delegate.cc',
+            'runtime/browser/save_password_infobar_delegate.h',
           ],
           'sources!':[
             'runtime/browser/devtools/xwalk_devtools_frontend.cc',

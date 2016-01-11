@@ -57,6 +57,8 @@ import org.chromium.media.MediaPlayerBridge;
 import org.chromium.ui.base.ActivityWindowAndroid;
 import org.chromium.ui.gfx.DeviceDisplayInfo;
 
+import org.xwalk.core.internal.infobar.InfoBarContainer;
+
 @JNINamespace("xwalk")
 /**
  * This class is the implementation class for XWalkViewInternal by calling internal
@@ -86,6 +88,7 @@ class XWalkContent implements XWalkPreferencesInternal.KeyValueChangeListener {
     private XWalkGetBitmapCallbackInternal mXWalkGetBitmapCallbackInternal;
     private ContentReadbackHandler mContentReadbackHandler;
     private GetBitmapCallback mGetBitmapCallback;
+    private InfoBarContainer mInfoBarContainer;
 
     long mNativeContent;
     long mNativeWebContents;
@@ -203,6 +206,10 @@ class XWalkContent implements XWalkPreferencesInternal.KeyValueChangeListener {
         mContentViewRenderView.setCurrentContentViewCore(mContentViewCore);
         // For addJavascriptInterface
         mContentsClientBridge.installWebContentsObserver(mWebContents);
+
+        // Setup InfoBarContainer for save password InforBar
+        mInfoBarContainer = new InfoBarContainer(mViewContext, mContentView);
+        mInfoBarContainer.setContentViewCore(mContentViewCore);
 
         // Set the third argument isAccessFromFileURLsGrantedByDefault to false, so that
         // the members mAllowUniversalAccessFromFileURLs and mAllowFileAccessFromFileURLs

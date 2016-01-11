@@ -188,6 +188,18 @@
       <message name="IDS_FILE_BROWSER_SELECT_SAVEAS_FILE_TITLE" desc="Select saveas file title.">
         Save file as
       </message>
+      <message name="IDS_SAVE_PASSWORD" desc="The title of the save password bubble when a password can be saved.">
+        Do you want to save your password for this site?
+      </message>
+      <message name="IDS_PASSWORD_MANAGER_SAVE_BUTTON" desc="Mobile: Button text for the 'Save Password' infobar's 'Remember password' option">
+        Save
+      </message>
+      <message name="IDS_PASSWORD_MANAGER_BLACKLIST_BUTTON" desc="Mobile: Button text for the 'Save Password' infobar's 'Never remember for this site' option">
+        Never
+      </message>
+      <message name="IDS_PASSWORD_MANAGER_SAVE_PASSWORD_SMART_LOCK_NO_THANKS_BUTTON" desc="Text for the button the user clicks to dismiss save password bubble.">
+        No thanks
+      </message>
     </messages>
   </release>
 </grit>

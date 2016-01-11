@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2014 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<resources>
+    <!-- Infobar dimensions -->
+    <!-- Text size of the infobar message. -->
+    <dimen name="infobar_text_size">16sp</dimen>
+    <!-- Minimum width of an infobar. -->
+    <dimen name="infobar_min_width">220dp</dimen>
+    <!-- Margin between items in an infobar. -->
+    <dimen name="infobar_margin">16dp</dimen>
+    <!-- Width and height of the infobar icon. -->
+    <dimen name="infobar_icon_size">36dp</dimen>
+</resources>

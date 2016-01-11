@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2014 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<resources>
+    <!-- Infobar colors -->
+    <color name="infobar_background">#fff</color>
+    <color name="infobar_background_separator">#afafaf</color>
+    <color name="infobar_accent_blue">#4285f4</color>
+    <color name="infobar_tertiary_button_text">#969696</color>
+
+    <color name="default_text_color">#333</color>
+</resources>

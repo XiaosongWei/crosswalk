@@ -173,6 +173,10 @@
       },
       'sources': [
         'runtime/android/core_internal/src/org/xwalk/core/internal/AndroidProtocolHandler.java',
+        'runtime/android/core_internal/src/org/xwalk/core/internal/infobar/ConfirmInfoBarDelegate.java',
+        'runtime/android/core_internal/src/org/xwalk/core/internal/infobar/InfoBar.java',
+        'runtime/android/core_internal/src/org/xwalk/core/internal/infobar/InfoBarContainer.java',
+        'runtime/android/core_internal/src/org/xwalk/core/internal/infobar/SavePasswordInfoBar.java',
         'runtime/android/core_internal/src/org/xwalk/core/internal/XWalkAutofillClientAndroid.java',
         'runtime/android/core_internal/src/org/xwalk/core/internal/XWalkContent.java',
         'runtime/android/core_internal/src/org/xwalk/core/internal/XWalkContentsClientBridge.java',

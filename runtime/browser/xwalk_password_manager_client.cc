@@ -35,6 +35,8 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/web_contents.h"
 
+#include "xwalk/runtime/browser/save_password_infobar_delegate.h"
+
 using base::LazyInstance;
 using password_manager::ContentPasswordManagerDriverFactory;
 using password_manager::PasswordManagerInternalsService;
@@ -165,7 +167,8 @@ bool XWalkPasswordManagerClient::PromptUserToSaveOrUpdatePassword(
     bool update_password) {
   if (form_to_save->IsBlacklisted())
     return false;
-  // TODO(Xiaosong): Prompt infobar UI to let user save password
+  SavePasswordInfoBarDelegate::Create(
+      web_contents(), form_to_save.Pass(), type);
   return true;
 }
 
