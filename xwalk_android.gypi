@@ -29,6 +29,10 @@
       'ldflags': [
         '-Wl,--no-fatal-warnings',
       ],
+      'libraries': [
+        '-lEGL',
+        '-lGLESv2',
+      ],
       'sources': [
         'runtime/app/android/xwalk_entry_point.cc',
         'runtime/app/android/xwalk_jni_registrar.cc',
