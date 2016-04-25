@@ -5,6 +5,10 @@
 #include "third_party/WebKit/public/platform/WebGraphicsContext3D.h"
 #include "stdlib.h"
 
+#include <android/log.h>
+#define WEBGL_LOG(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR, "WebGL", "%s:" FORMAT,  __FUNCTION__, ##__VA_ARGS__)
+
+
 namespace blink {
 
 class XWalkWebGraphicsContext3DDirect : public WebGraphicsContext3D {
@@ -52,9 +56,9 @@ public:
      void requestExtensionCHROMIUM(const char*) { }
 
     // GL_CHROMIUM_framebuffer_multisample
-     void blitFramebufferCHROMIUM(WGC3Dint srcX0, WGC3Dint srcY0, WGC3Dint srcX1, WGC3Dint srcY1, 
+     void blitFramebufferCHROMIUM(WGC3Dint srcX0, WGC3Dint srcY0, WGC3Dint srcX1, WGC3Dint srcY1,
      WGC3Dint dstX0, WGC3Dint dstY0, WGC3Dint dstX1, WGC3Dint dstY1, WGC3Dbitfield mask, WGC3Denum filter) { }
-     void renderbufferStorageMultisampleCHROMIUM(WGC3Denum target, WGC3Dsizei samples, 
+     void renderbufferStorageMultisampleCHROMIUM(WGC3Denum target, WGC3Dsizei samples,
         WGC3Denum internalformat, WGC3Dsizei width, WGC3Dsizei height) { }
 
     // GL_CHROMIUM_lose_context
@@ -140,16 +144,14 @@ public:
      void disable(WGC3Denum cap) {mImpl->disable(cap); }
      void disableVertexAttribArray(WGC3Duint index) {mImpl->disableVertexAttribArray(index); }
      void drawArrays(WGC3Denum mode, WGC3Dint first, WGC3Dsizei count) {mImpl->drawArrays(mode, first, count); }
-     
      void drawElements(WGC3Denum mode, WGC3Dsizei count, WGC3Denum type, WGC3Dintptr offset) {
         mImpl->drawElements(mode, count, type, (const void*)offset);
      }
-     
      void enable(WGC3Denum cap) {mImpl->enable(cap); }
      void enableVertexAttribArray(WGC3Duint index) {mImpl->enableVertexAttribArray(index); }
      void finish() {mImpl->finish(); }
      void flush() {mImpl->flush(); }
-     void framebufferRenderbuffer(WGC3Denum target, WGC3Denum attachment, WGC3Denum renderbuffertarget, WebGLId renderbuffer) { 
+     void framebufferRenderbuffer(WGC3Denum target, WGC3Denum attachment, WGC3Denum renderbuffertarget, WebGLId renderbuffer) {
         mImpl->framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);}
      void framebufferTexture2D(WGC3Denum target, WGC3Denum attachment, WGC3Denum textarget, WebGLId texture, WGC3Dint level) {
         mImpl->framebufferTexture2D(target, attachment,textarget, texture, level);  }
@@ -158,15 +160,57 @@ public:
      void generateMipmap(WGC3Denum target) {mImpl->generateMipmap(target); }
 
      bool getActiveAttrib(WebGLId program, WGC3Duint index, ActiveInfo& info) {
-        int bufSize = info.name.length();
-        int length =0;
-        mImpl->getActiveAttrib(program, index, bufSize, &length, &info.size, &info.type,  (char*)(info.name.utf8().data()));
+        if (!program) {
+          synthesizeGLError(GL_INVALID_VALUE);
+          return false;
+        }
+        GLint max_name_length = -1;
+        mImpl->getProgramiv(
+         program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &max_name_length);
+        if (max_name_length < 0)
+          return false;
+        if (max_name_length == 0) {
+          // No active attributes exist.
+          synthesizeGLError(GL_INVALID_VALUE);
+          return false;
+        }
+        scoped_ptr<GLchar[]> name(new GLchar[max_name_length]);
+        GLsizei length = 0;
+        GLint size = -1;
+        GLenum type = 0;
+        mImpl->getActiveAttrib(
+         program, index, max_name_length, &length, &size, &type, name.get());
+        if (size < 0) {
+          return false;
+        }
+        info.name = blink::WebString::fromUTF8(name.get(), length);
+        info.type = type;
+        info.size = size;
         return true;
      }
      bool getActiveUniform(WebGLId program, WGC3Duint index, ActiveInfo& info) {
-        int bufSize = info.name.length();
-        int length =0;
-        mImpl->getActiveUniform(program, index, bufSize, &length, &info.size, &info.type, (char*)(info.name.utf8().data()));
+        GLint max_name_length = -1;
+        mImpl->getProgramiv(
+          program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_name_length);
+        if (max_name_length < 0)
+          return false;
+        if (max_name_length == 0) {
+          // No active uniforms exist.
+          synthesizeGLError(GL_INVALID_VALUE);
+          return false;
+        }
+        scoped_ptr<GLchar[]> name(new GLchar[max_name_length]);
+        GLsizei length = 0;
+        GLint size = -1;
+        GLenum type = 0;
+        mImpl->getActiveUniform(
+          program, index, max_name_length, &length, &size, &type, name.get());
+        if (size < 0) {
+          return false;
+        }
+        info.name = blink::WebString::fromUTF8(name.get(), length);
+        info.type = type;
+        info.size = size;
         return true;
      }
      void getAttachedShaders(WebGLId program, WGC3Dsizei maxCount, WGC3Dsizei* count, WebGLId* shaders) {
@@ -184,48 +228,66 @@ public:
      void getIntegerv(WGC3Denum pname, WGC3Dint* value) {mImpl->getIntegerv(pname, value); }
      void getProgramiv(WebGLId program, WGC3Denum pname, WGC3Dint* value) {mImpl->getProgramiv(program, pname, value); }
 
-     
      WebString getProgramInfoLog(WebGLId program){
-        char log[2048];
-        int logLength=0;
-        mImpl->getProgramInfoLog(program, 2048, &logLength, log); 
-        return WebString::fromUTF8(log);
+         GLint logLength = 0;
+         mImpl->getProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+         if (!logLength)
+           return blink::WebString();
+         scoped_ptr<GLchar[]> log(new GLchar[logLength]);
+         if (!log)
+           return blink::WebString();
+         GLsizei returnedLogLength = 0;
+         mImpl->getProgramInfoLog(
+           program, logLength, &returnedLogLength, log.get());
+         DCHECK_EQ(logLength, returnedLogLength + 1);
+         blink::WebString res =
+           blink::WebString::fromUTF8(log.get(), returnedLogLength);
+         return res;
      }
 
      void getRenderbufferParameteriv(WGC3Denum target, WGC3Denum pname, WGC3Dint* value) {
           mImpl->getRenderbufferParameteriv(target, pname, value); }
      void getShaderiv(WebGLId shader, WGC3Denum pname, WGC3Dint* value) {
           mImpl->getShaderiv(shader, pname, value); }
-          
      WebString getShaderInfoLog(WebGLId shader) {
-        char log[2048];
-        int logLength=0;
-        mImpl->getShaderInfoLog(shader, 2048, &logLength, log);
-        return WebString::fromUTF8(log);
+         GLint logLength = 0;
+         mImpl->getShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+         if (!logLength)
+           return blink::WebString();
+         scoped_ptr<GLchar[]> log(new GLchar[logLength]);
+         if (!log)
+           return blink::WebString();
+         GLsizei returnedLogLength = 0;
+         mImpl->getShaderInfoLog(
+           shader, logLength, &returnedLogLength, log.get());
+         DCHECK_EQ(logLength, returnedLogLength + 1);
+         blink::WebString res =
+           blink::WebString::fromUTF8(log.get(), returnedLogLength);
+         return res;
      }
 
-     
      void getShaderPrecisionFormat(WGC3Denum shadertype, WGC3Denum precisiontype, WGC3Dint* range, WGC3Dint* precision) {
          mImpl->getShaderPrecisionFormat(shadertype, precisiontype, range, precision); }
-         
+
      WebString getShaderSource(WebGLId shader) {
-        char* shaderSource = NULL;
-        int sourceLength = 0;
-        int shaderLength = 1;
-        
-        while(shaderLength >= sourceLength)
-        {
-            if(shaderSource != NULL)
-                free(shaderSource);
-            sourceLength += 2048;
-            shaderSource = (char*) malloc(sourceLength);
-            mImpl->getShaderInfoLog(shader, 2048, &shaderLength, shaderSource);
-        }
-        return WebString::fromUTF8((const char*)shaderSource);
+         GLint logLength = 0;
+         mImpl->getShaderiv(shader, GL_SHADER_SOURCE_LENGTH, &logLength);
+         if (!logLength)
+           return blink::WebString();
+         scoped_ptr<GLchar[]> log(new GLchar[logLength]);
+         if (!log)
+           return blink::WebString();
+         GLsizei returnedLogLength = 0;
+         mImpl->getShaderSource(
+           shader, logLength, &returnedLogLength, log.get());
+         if (!returnedLogLength)
+           return blink::WebString();
+         DCHECK_EQ(logLength, returnedLogLength + 1);
+         blink::WebString res =
+           blink::WebString::fromUTF8(log.get(), returnedLogLength);
+         return res;
      }
 
-
-     
      WebString getString(WGC3Denum name) {return WebString::fromUTF8((const char*) (mImpl->getString(name))); }
      void getTexParameterfv(WGC3Denum target, WGC3Denum pname, WGC3Dfloat* value) {mImpl->getTexParameterfv(target, pname, value); }
      void getTexParameteriv(WGC3Denum target, WGC3Denum pname, WGC3Dint* value) {mImpl->getTexParameteriv(target, pname, value); }
